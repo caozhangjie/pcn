@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorpack import dataflow
-
+import random
 
 def resample_pcd(pcd, n):
     """Drop or duplicate points so that pcd has exactly n points"""
@@ -67,9 +67,13 @@ class BatchData(dataflow.ProxyDataFlow):
         return ids, inputs, npts, gts
 
 
-def lmdb_dataflow(lmdb_path, batch_size, input_size, output_size, is_training, test_speed=False):
+
+def lmdb_dataflow(lmdb_path, batch_size, input_size, output_size, is_training, test_speed=False, filter_rate=0):
     df = dataflow.LMDBSerializer.load(lmdb_path, shuffle=False)
+    df = dataflow.MapData(df, lambda dp: [item for item in dp]+[random.random()])
+
     size = df.size()
+    print(size)
     if is_training:
         df = dataflow.LocallyShuffleData(df, buffer_size=2000)
         df = dataflow.PrefetchData(df, nr_prefetch=500, nr_proc=1)
@@ -81,6 +85,7 @@ def lmdb_dataflow(lmdb_path, batch_size, input_size, output_size, is_training, t
         dataflow.TestDataSpeed(df, size=1000).start()
     df.reset_state()
     return df, size
+
 
 
 def get_queued_data(generator, dtypes, shapes, queue_capacity=10):

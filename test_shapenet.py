@@ -46,7 +46,7 @@ def test(args):
     emd_per_cat = {}
     for i, model_id in enumerate(model_list):
         partial = read_pcd(os.path.join(args.data_dir, 'partial', '%s.pcd' % model_id))
-        complete = read_pcd(os.path.join(args.data_dir, 'complete', '%s.pcd' % model_id))
+        complete = read_pcd(os.path.join(args.data_dir, 'gt', '%s.pcd' % model_id))
         start = time.time()
         completion = sess.run(model.outputs, feed_dict={inputs: [partial], npts: [partial.shape[0]]})
         total_time += time.time() - start
@@ -63,10 +63,9 @@ def test(args):
         cd_per_cat[synset_id].append(cd)
         emd_per_cat[synset_id].append(emd)
 
-        if i % args.plot_freq == 0:
-            os.makedirs(os.path.join(args.results_dir, 'plots', synset_id), exist_ok=True)
-            plot_path = os.path.join(args.results_dir, 'plots', synset_id, '%s.png' % model_id)
-            plot_pcd_three_views(plot_path, [partial, completion[0], complete],
+        os.makedirs(os.path.join(args.results_dir, 'plots', synset_id), exist_ok=True)
+        plot_path = os.path.join(args.results_dir, 'plots', synset_id, '%s.png' % model_id)
+        plot_pcd_three_views(plot_path, [partial, completion[0], complete],
                                  ['input', 'output', 'ground truth'],
                                  'CD %.4f  EMD %.4f' % (cd, emd),
                                  [5, 0.5, 0.5])
@@ -89,11 +88,11 @@ def test(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--list_path', default='data/shapenet/test.list')
-    parser.add_argument('--data_dir', default='data/shapenet/test')
+    parser.add_argument('--list_path', default='data/shapenet/valid.list')
+    parser.add_argument('--data_dir', default='data/shapenet_pcd')
     parser.add_argument('--model_type', default='pcn_emd')
     parser.add_argument('--checkpoint', default='data/trained_models/pcn_emd')
-    parser.add_argument('--results_dir', default='results/shapenet_pcn_emd')
+    parser.add_argument('--results_dir', default='results/shapenet_pcn_emd/')
     parser.add_argument('--num_gt_points', type=int, default=16384)
     parser.add_argument('--plot_freq', type=int, default=100)
     parser.add_argument('--save_pcd', action='store_true')

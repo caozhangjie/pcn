@@ -3,7 +3,6 @@
 import numpy as np
 from open3d import *
 
-
 def read_pcd(filename):
     pcd = read_point_cloud(filename)
     return np.array(pcd.points)

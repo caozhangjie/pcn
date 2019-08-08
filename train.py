@@ -11,7 +11,9 @@ from data_util import lmdb_dataflow, get_queued_data
 from termcolor import colored
 from tf_util import add_train_summary
 from visu_util import plot_pcd_three_views
+import pdb
 
+#os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 def train(args):
     is_training_pl = tf.placeholder(tf.bool, shape=(), name='is_training')
@@ -24,6 +26,7 @@ def train(args):
 
     model_module = importlib.import_module('.%s' % args.model_type, 'models')
     model = model_module.Model(inputs_pl, npts_pl, gt_pl, alpha)
+    print('construct models')
     add_train_summary('alpha', alpha)
 
     if args.lr_decay:
@@ -41,7 +44,7 @@ def train(args):
     train_op = trainer.minimize(model.loss, global_step)
 
     df_train, num_train = lmdb_dataflow(
-        args.lmdb_train, args.batch_size, args.num_input_points, args.num_gt_points, is_training=True)
+        args.lmdb_train, args.batch_size, args.num_input_points, args.num_gt_points, is_training=True, filter_rate=0.8)
     train_gen = df_train.get_data()
     df_valid, num_valid = lmdb_dataflow(
         args.lmdb_valid, args.batch_size, args.num_input_points, args.num_gt_points, is_training=False)
